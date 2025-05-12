@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Animal Classification</title>
+  <link rel="stylesheet" href="style/style.css">
+</head>
+<body>
+
+  <div class="container">
+    <h1>Animal Image Classification</h1>
+
+    <!-- Upload Area (Drag-and-Drop + Button) -->
+    <div id="upload-area" class="upload-area">
+      <input type="file" id="file-input" accept="image/*" style="display: none;" />
+      <button id="upload-btn">Upload Image</button>
+      <p>Or drag & drop your image here</p>
+      <div id="drag-drop-area" class="drag-drop-area">
+        <p>Drag your image here</p>
+      </div>
+    </div>
+
+    <!-- Display selected image -->
+    <div id="image-preview" class="image-preview">
+      <img id="preview-img" src="" alt="Selected Image" text-align: center>
+    </div>
+
+    <!-- Prediction Result -->
+    <div id="result" class="result">
+      <h2>Prediction: <span id="prediction">None</span></h2>
+    </div>
+  </div>
+
+  <script src="script/script.js"></script>
+</body>
+</html>
