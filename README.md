@@ -8,9 +8,12 @@ The goal of this project is to build a deep learning model that can classify ima
 
 ### Dataset Download
 
-To download the dataset, you need to have a Kaggle account. You can download the dataset from [here](https://www.kaggle.com/datasets/alessiocorrado99/animals10). After downloading, you can extract the images and place them in the appropriate directory structure for training.
+To download the dataset, you need to have a Kaggle account. You can download the dataset from [Hugging face](https://www.kaggle.com/datasets/alessiocorrado99/animals10). After downloading, you can extract the images and place them in the appropriate directory structure for training.
 
-## 
+You can download evalution dataset from [Hugging face](https://huggingface.co/datasets/RenA1ssance/CPS3320_eval)
+
+## Model download
+You can download model from [Hugging face](https://huggingface.co/RenA1ssance/CPS3320)
 
 
 
