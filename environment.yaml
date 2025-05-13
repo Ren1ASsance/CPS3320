@@ -3,15 +3,14 @@ channels:
   - conda-forge
   - defaults
 dependencies:
-  - python=3.8
-  - tensorflow-gpu=2.8.0
+  - fastapi
+  - uvicorn
+  - python=3.11
+  - pytorch
   - numpy
-  - scikit-learn
   - matplotlib
   - pillow
   - pyyaml
   - ipython
   - jupyter
   - pip
-  - pip:
-    - tensorflow-datasets
