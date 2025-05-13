@@ -25,7 +25,7 @@ CLASS_NAMES = ["butterfly", "cat", "chicken", "cow", "dog", "elephant", "horse",
 # Load the trained model (first define the architecture and then load the state_dict)
 def load_model():
     model = AnimalCNN(num_classes=len(CLASS_NAMES))  # Create the model instance
-    model.load_state_dict(torch.load('checkpoints/animal_cnn.pth'))  # Load the model weights
+    model.load_state_dict(torch.load('model/animal_cnn.pth'))  # Load the model weights
     model.eval()  # Set the model to evaluation mode
     return model
 
