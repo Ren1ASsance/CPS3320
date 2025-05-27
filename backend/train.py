@@ -5,49 +5,16 @@ import torch.optim as optim
 from torchvision import datasets, transforms
 from torch.utils.data import DataLoader
 from tqdm import tqdm
-
-# Define the CNN model for animal classification
-class AnimalCNN(nn.Module):
-    def __init__(self, num_classes):
-        super(AnimalCNN, self).__init__()
-        # Feature extraction layers
-        self.features = nn.Sequential(
-            nn.Conv2d(3, 32, 3, padding=1),       # 3 input channels (RGB), 32 output channels, 3x3 kernel
-            nn.BatchNorm2d(32),
-            nn.ReLU(),
-            nn.MaxPool2d(2),                      # Downsample by 2
-
-            nn.Conv2d(32, 64, 3, padding=1),
-            nn.BatchNorm2d(64),
-            nn.ReLU(),
-            nn.MaxPool2d(2),
-
-            nn.Conv2d(64, 128, 3, padding=1),
-            nn.BatchNorm2d(128),
-            nn.ReLU(),
-            nn.MaxPool2d(2),
-        )
-        # Classification layers
-        self.classifier = nn.Sequential(
-            nn.Linear(128 * 8 * 8, 512),          # Fully connected layer
-            nn.ReLU(),
-            nn.Dropout(0.5),
-            nn.Linear(512, num_classes)           # Output layer with `num_classes` units
-        )
-
-    def forward(self, x):
-        x = self.features(x)                      # Extract features
-        x = x.view(x.size(0), -1)                 # Flatten
-        x = self.classifier(x)                    # Classify
-        return x
+from model import AnimalCNN
 
 # Trainer class for training and validating the model
 class AnimalTrainer:
-    def __init__(self, train_dir, val_dir, checkpoint_dir='../checkpoints', num_epochs=30):
+    def __init__(self, train_dir, checkpoint_dir='../checkpoints', num_epochs=30,max_patience = 3):
         self.train_dir = train_dir                      
         self.checkpoint_dir = checkpoint_dir
         self.checkpoint_path = os.path.join(checkpoint_dir, '../animal_cnn.pth')
         self.num_epochs = num_epochs
+        self.max_patience = max_patience
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
         os.makedirs(self.checkpoint_dir, exist_ok=True)
@@ -101,8 +68,11 @@ class AnimalTrainer:
         print("Using device:", self.device)
         self.load_checkpoint()
 
+        best_val_acc = 0.0  # Initialize best validation accuracy
+        patience_counter = 0  # Counter to track how many epochs without improvement in validation accuracy
+
         for epoch in range(self.num_epochs):
-            self.model.train()
+            self.model.train()  # Set the model to training mode
             running_loss = 0.0
             correct = 0
             total = 0
@@ -111,15 +81,16 @@ class AnimalTrainer:
             for inputs, labels in progress_bar:
                 inputs, labels = inputs.to(self.device), labels.to(self.device)
 
-                self.optimizer.zero_grad()
-                outputs = self.model(inputs)
-                loss = self.criterion(outputs, labels)
-                loss.backward()
-                self.optimizer.step()
+                self.optimizer.zero_grad()  # Clear gradients from previous step
+                outputs = self.model(inputs)  # Forward pass: get predictions from the model
+                loss = self.criterion(outputs, labels)  # Compute loss
+
+                loss.backward()  # Backward pass: compute gradients
+                self.optimizer.step()  # Update weights using optimizer
 
                 running_loss += loss.item() * inputs.size(0)
-                _, predicted = torch.max(outputs, 1)
-                correct += (predicted == labels).sum().item()
+                _, predicted = torch.max(outputs, 1)  # Get the predicted class with the highest score
+                correct += (predicted == labels).sum().item()  # Count correct predictions
                 total += labels.size(0)
 
                 progress_bar.set_postfix({
@@ -127,13 +98,30 @@ class AnimalTrainer:
                     "accuracy": f"{100 * correct / total:.2f}"
                 })
 
-            # Print metrics at the end of each epoch
             epoch_loss = running_loss / len(self.train_loader.dataset)
             epoch_acc = 100. * correct / total
             print(f"Epoch [{epoch+1}/{self.num_epochs}] | Loss: {epoch_loss:.4f} | Train Acc: {epoch_acc:.2f}%")
 
+            # Update learning rate scheduler
             self.scheduler.step()
-            torch.save(self.model.state_dict(), self.checkpoint_path)  # Save model after each epoch
+
+            # Save model checkpoint after each epoch
+            torch.save(self.model.state_dict(), self.checkpoint_path)
+
+            # Validate the model after each epoch
             self.validate()
 
+            # Check if validation accuracy improved
+            if epoch_acc > best_val_acc:
+                best_val_acc = epoch_acc  # Update the best validation accuracy
+                patience_counter = 0  # Reset patience counter
+            else:
+                patience_counter += 1  # If no improvement, increment patience counter
+
+            # If patience counter exceeds max_patience, trigger early stopping
+            if patience_counter >= self.max_patience:
+                print(f"Early stopping triggered. Validation accuracy didn't improve for {self.max_patience} epochs.")
+                break  # Stop training early
+
         return self.model
+
